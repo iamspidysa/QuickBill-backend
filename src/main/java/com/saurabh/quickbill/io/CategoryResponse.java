@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
-@Builder
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategoryResponse {
