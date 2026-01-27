@@ -4,6 +4,7 @@ import com.saurabh.quickbill.entity.CategoryEntity;
 import com.saurabh.quickbill.io.CategoryRequest;
 import com.saurabh.quickbill.io.CategoryResponse;
 import com.saurabh.quickbill.repository.CategoryRepository;
+import com.saurabh.quickbill.repository.ItemRepository;
 import com.saurabh.quickbill.service.CategoryService;
 import com.saurabh.quickbill.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final FileUploadService fileUploadService;
+    private final ItemRepository itemRepository;
 
     @Override
     public CategoryResponse add(CategoryRequest request, MultipartFile file) {
@@ -48,6 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private CategoryResponse convertToResponse(CategoryEntity newCategory) {
+        Integer itemsCount = itemRepository.countByCategoryId(newCategory.getId());
         return CategoryResponse.builder()
                 .categoryId(newCategory.getCategoryId())
                 .name(newCategory.getName())
@@ -56,6 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .imgUrl(newCategory.getImgUrl())
                 .createdAt(newCategory.getCreatedAt())
                 .updatedAt(newCategory.getUpdatedAt())
+                .items(itemsCount)
                 .build();
     }
 

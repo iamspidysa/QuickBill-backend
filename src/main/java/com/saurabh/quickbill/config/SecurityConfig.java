@@ -38,7 +38,7 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/login","/encode").permitAll()
-                        .requestMatchers("/category","items").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/categories","/items").hasAnyRole("USER","ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -64,7 +64,8 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/",config);
+//        Changed from / to /** - Login Issue Resolved
+        source.registerCorsConfiguration("/**",config);
         return source;
     }
 
