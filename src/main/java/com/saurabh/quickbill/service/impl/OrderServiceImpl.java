@@ -2,10 +2,7 @@ package com.saurabh.quickbill.service.impl;
 
 import com.saurabh.quickbill.entity.OrderEntity;
 import com.saurabh.quickbill.entity.OrderItemEntity;
-import com.saurabh.quickbill.io.OrderRequest;
-import com.saurabh.quickbill.io.OrderResponse;
-import com.saurabh.quickbill.io.PaymentDetails;
-import com.saurabh.quickbill.io.PaymentMethod;
+import com.saurabh.quickbill.io.*;
 import com.saurabh.quickbill.repository.OrderEntityRepository;
 import com.saurabh.quickbill.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +81,8 @@ public class OrderServiceImpl implements OrderService {
                 .subTotal(request.getSubTotal())
                 .tax(request.getTax())
                 .grandTotal(request.getGrandTotal())
-                .paymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()))
+                .paymentMethod(PaymentMethod.
+                        valueOf(request.getPaymentMethod()))
                 .build();
     }
 
@@ -101,5 +99,31 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderResponse verifyPayment(PaymentVerificationRequest request) {
+            OrderEntity order = orderEntityRepository.findByOrderId(request.getOrderId())
+                    .orElseThrow( ()-> new RuntimeException("Order not found"));
+
+            if(!verifyRazorpaySignature(request.getRazorpayOrderId(),
+                    request.getRazorpayPaymentId(),
+                    request.getRazorpaySignature())){
+                throw new RuntimeException("Payment Verification failed");
+            }
+
+            PaymentDetails paymentDetails = order.getPaymentDetails();
+            paymentDetails.setRazorpayOrderId(request.getRazorpayOrderId());
+            paymentDetails.setRazorpayPaymentId(request.getRazorpayPaymentId());
+            paymentDetails.setRazorpaySignature(request.getRazorpaySignature());
+            paymentDetails.setStatus(PaymentDetails.PaymentStatus.COMPLETED);
+
+            order = orderEntityRepository.save(order);
+            return convertToResponse(order);
+    }
+
+    private boolean verifyRazorpaySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
+        // In Production grade , we need to verify signature not just return true.
+        return true;
     }
 }
