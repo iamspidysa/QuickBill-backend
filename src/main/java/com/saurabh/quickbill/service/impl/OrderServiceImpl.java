@@ -1,14 +1,20 @@
 package com.saurabh.quickbill.service.impl;
 
+import com.razorpay.RazorpayException;
+import com.razorpay.Utils;
 import com.saurabh.quickbill.entity.OrderEntity;
 import com.saurabh.quickbill.entity.OrderItemEntity;
+import com.saurabh.quickbill.exception.PaymentVerificationException;
 import com.saurabh.quickbill.io.*;
 import com.saurabh.quickbill.repository.OrderEntityRepository;
 import com.saurabh.quickbill.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +23,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+
+    @Value("${jwt.secret.key}")
+    private String razorpayKeySecret;
 
     private final OrderEntityRepository orderEntityRepository;
 
@@ -105,15 +114,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse verifyPayment(PaymentVerificationRequest request) {
             OrderEntity order = orderEntityRepository.findByOrderId(request.getOrderId())
                     .orElseThrow( ()-> new RuntimeException("Order not found"));
 
-            if(!verifyRazorpaySignature(request.getRazorpayOrderId(),
+            verifyRazorpaySignature(
+                    request.getRazorpayOrderId(),
                     request.getRazorpayPaymentId(),
-                    request.getRazorpaySignature())){
-                throw new RuntimeException("Payment Verification failed");
-            }
+                    request.getRazorpaySignature()
+            );
 
             PaymentDetails paymentDetails = order.getPaymentDetails();
             paymentDetails.setRazorpayOrderId(request.getRazorpayOrderId());
@@ -143,8 +153,18 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    private boolean verifyRazorpaySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
-        // In Production grade , we need to verify signature not just return true.
-        return true;
+    private void verifyRazorpaySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature){
+        try{
+            JSONObject attributes = new JSONObject();
+            attributes.put("razorpay_order_id", razorpayOrderId);
+            attributes.put("razorpay_payment_id", razorpayPaymentId);
+            attributes.put("razorpay_signature", razorpaySignature);
+
+            Utils.verifyPaymentSignature(attributes,razorpayKeySecret);
+
+        } catch (RazorpayException e) {
+            throw new PaymentVerificationException("Payment signature verification failed. Possible fraud attempt.");
+        }
     }
+
 }

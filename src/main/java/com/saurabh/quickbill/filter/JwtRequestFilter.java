@@ -33,7 +33,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
             jwt = authorizationHeader.substring(7);
-            email = jwtUtil.extractUsername(jwt);
+
+            try {
+                // only parse if jwt look valid
+                if (jwt != null && jwt.contains(".")){
+                    email = jwtUtil.extractUsername(jwt);
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid JWT :"+ e.getMessage());
+            }
         }
 
         if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
