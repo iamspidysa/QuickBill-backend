@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -20,8 +21,11 @@ public class JwtUtil {
     @Value("${jwt.secret.key}")
     private String SECRET_KEY;
 
+    // Previous : code reads the secret as plain UTF-8 text,
+    // Now it's a hex string , we decode it properly into actual bytes
     private SecretKey getSignKey(){
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = HexFormat.of().parseHex(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(UserDetails userDetails){
@@ -35,7 +39,7 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .signWith(getSignKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
