@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +28,9 @@ public class OrderEntity {
     private String orderId;
     private String customerName;
     private String phoneNumber;
-    private Double subTotal;
-    private Double tax;
-    private Double grandTotal;
+    private BigDecimal subTotal;
+    private BigDecimal tax;
+    private BigDecimal grandTotal;
 
     private LocalDateTime createdAt;
 

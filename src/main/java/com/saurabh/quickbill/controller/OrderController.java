@@ -3,6 +3,7 @@ package com.saurabh.quickbill.controller;
 import com.saurabh.quickbill.io.OrderRequest;
 import com.saurabh.quickbill.io.OrderResponse;
 import com.saurabh.quickbill.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse createOrder(@RequestBody OrderRequest request){
+    public OrderResponse createOrder(@Valid @RequestBody OrderRequest request){
         return orderService.createOrder(request);
     }
 

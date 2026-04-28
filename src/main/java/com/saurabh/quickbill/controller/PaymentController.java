@@ -7,6 +7,7 @@ import com.saurabh.quickbill.io.PaymentVerificationRequest;
 import com.saurabh.quickbill.io.RazorpayOrderResponse;
 import com.saurabh.quickbill.service.OrderService;
 import com.saurabh.quickbill.service.RazorpayService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +22,13 @@ public class PaymentController {
 
     @PostMapping("/create-order")
     @ResponseStatus(HttpStatus.CREATED)
-    public RazorpayOrderResponse createRazorpayResponse(@RequestBody PaymentRequest request) throws RazorpayException {
+    public RazorpayOrderResponse createRazorpayResponse(@Valid @RequestBody PaymentRequest request) throws RazorpayException {
 
         return razorpayService.createOrder(request.getAmount(), request.getCurrency());
     }
 
     @PostMapping("/verify")
-    public OrderResponse verifyPayment(@RequestBody PaymentVerificationRequest request){
+    public OrderResponse verifyPayment(@Valid @RequestBody PaymentVerificationRequest request){
         return orderService.verifyPayment(request);
     }
 }

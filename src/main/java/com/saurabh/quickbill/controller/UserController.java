@@ -3,6 +3,7 @@ package com.saurabh.quickbill.controller;
 import com.saurabh.quickbill.io.UserRequest;
 import com.saurabh.quickbill.io.UserResponse;
 import com.saurabh.quickbill.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse registerUser(@RequestBody UserRequest request){
+    public UserResponse registerUser(@Valid @RequestBody UserRequest request){
         try{
             return userService.createUser(request);
         }catch (Exception e){

@@ -5,6 +5,7 @@ import com.saurabh.quickbill.io.AuthResponse;
 import com.saurabh.quickbill.service.UserService;
 import com.saurabh.quickbill.service.impl.AppUserDetailsService;
 import com.saurabh.quickbill.util.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,7 +33,7 @@ public class AuthController {
     //Login EndPoint
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) throws Exception {
+    public AuthResponse login(@Valid @RequestBody AuthRequest request) throws Exception {
         authenticate(request.getEmail(),request.getPassword());
         final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.getEmail());
         final String jwtToken = jwtUtil.generateToken(userDetails);
