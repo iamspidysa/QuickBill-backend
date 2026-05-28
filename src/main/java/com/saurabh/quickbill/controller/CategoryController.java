@@ -64,11 +64,7 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("admin/categories/{categoryId}")
     public void remove(@PathVariable String categoryId){
-        try {
             categoryService.delete(categoryId);
-        }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,e.getMessage());
-        }
     }
 
 }

@@ -22,11 +22,7 @@ public class UserController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse registerUser(@Valid @RequestBody UserRequest request){
-        try{
             return userService.createUser(request);
-        }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Unable to create user "+e.getMessage());
-        }
     }
 
     @GetMapping("/users")
@@ -37,11 +33,7 @@ public class UserController {
     @DeleteMapping("/users/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable String id){
-        try {
             userService.deleteUser(id);
-        }catch (Exception e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found");
-        }
 
     }
 }

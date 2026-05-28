@@ -1,6 +1,7 @@
 package com.saurabh.quickbill.service.impl;
 
 import com.saurabh.quickbill.entity.UserEntity;
+import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.UserRequest;
 import com.saurabh.quickbill.io.UserResponse;
 import com.saurabh.quickbill.repository.UserRepository;
@@ -67,7 +68,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String id) {
         UserEntity existingUser = userRepository.findByUserId(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: "+id));
         userRepository.delete(existingUser);
     }
 }

@@ -42,10 +42,10 @@ public class FileUploadServiceImpl implements FileUploadService {
                 return "https://"+bucketName+".s3.amazonaws.com/"+key;
             }
             else{
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"An error occurred during uploading the file");
+                    throw new RuntimeException("An error occurred during uploading the file");
             }
         }catch (IOException e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"An error occurred during uploading the file");
+            throw new RuntimeException("An error occurred during uploading the file");
         }
     }
 

@@ -5,6 +5,7 @@ import com.razorpay.Utils;
 import com.saurabh.quickbill.entity.OrderEntity;
 import com.saurabh.quickbill.entity.OrderItemEntity;
 import com.saurabh.quickbill.exception.PaymentVerificationException;
+import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.*;
 import com.saurabh.quickbill.repository.OrderEntityRepository;
 import com.saurabh.quickbill.service.OrderService;
@@ -101,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteOrder(String orderId) {
         OrderEntity existingOrder = orderEntityRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: "+ orderId));
         orderEntityRepository.delete(existingOrder);
     }
 
@@ -117,7 +118,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse verifyPayment(PaymentVerificationRequest request) {
             OrderEntity order = orderEntityRepository.findByOrderId(request.getOrderId())
-                    .orElseThrow( ()-> new RuntimeException("Order not found"));
+                    .orElseThrow( ()-> new ResourceNotFoundException("Order not found: "+ request.getOrderId()));
 
             verifyRazorpaySignature(
                     request.getRazorpayOrderId(),

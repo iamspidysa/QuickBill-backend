@@ -1,6 +1,7 @@
 package com.saurabh.quickbill.service.impl;
 
 import com.saurabh.quickbill.entity.CategoryEntity;
+import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.CategoryRequest;
 import com.saurabh.quickbill.io.CategoryResponse;
 import com.saurabh.quickbill.repository.CategoryRepository;
@@ -44,7 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(String categoryId) {
         CategoryEntity existingCategory = categoryRepository.findByCategoryId(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category Not Found"+categoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found: "+categoryId));
         fileUploadService.deleteFile(existingCategory.getImgUrl());
         categoryRepository.delete(existingCategory);
     }

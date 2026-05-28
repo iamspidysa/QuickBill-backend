@@ -2,6 +2,7 @@ package com.saurabh.quickbill.service.impl;
 
 import com.saurabh.quickbill.entity.CategoryEntity;
 import com.saurabh.quickbill.entity.ItemEntity;
+import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.ItemRequest;
 import com.saurabh.quickbill.io.ItemResponse;
 import com.saurabh.quickbill.repository.CategoryRepository;
@@ -31,7 +32,7 @@ public class ItemServiceImpl implements ItemService {
         String imgUrl = fileUploadService.uploadFile(file);
         ItemEntity newItem = convertToEntity(request);
         CategoryEntity existingCategory = categoryRepository.findByCategoryId(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not Found"+request.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not Found: "+request.getCategoryId()));
         newItem.setCategory(existingCategory);
         newItem.setImgUrl(imgUrl);
         newItem = itemRepository.save(newItem);
@@ -74,12 +75,14 @@ public class ItemServiceImpl implements ItemService {
     public void deleteItem(String itemId) {
         // Delete the Image from AWS and then remove the item.
         ItemEntity existingItem = itemRepository.findByItemId(itemId)
-                .orElseThrow(()-> new RuntimeException("Item not found: "+itemId));
+                .orElseThrow(()-> new ResourceNotFoundException("Item not found: "+itemId));
+
         boolean isFileDeleted = fileUploadService.deleteFile(existingItem.getImgUrl());
+
         if(isFileDeleted){
             itemRepository.delete(existingItem);
         }else {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Unable to delete the image");
+            throw new RuntimeException("Failed to delete item image from storage");
         }
     }
 }

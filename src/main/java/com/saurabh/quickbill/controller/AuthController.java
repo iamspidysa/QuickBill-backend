@@ -33,7 +33,7 @@ public class AuthController {
     //Login EndPoint
 
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody AuthRequest request) throws Exception {
+    public AuthResponse login(@Valid @RequestBody AuthRequest request) {
         authenticate(request.getEmail(),request.getPassword());
         final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.getEmail());
         final String jwtToken = jwtUtil.generateToken(userDetails);
@@ -42,19 +42,19 @@ public class AuthController {
 
     }
 
-    private void authenticate(String email, String password) throws Exception {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
-        } catch (DisabledException e) {
-           throw new Exception("User Disabled");
-        }catch (BadCredentialsException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Email or password is incorrect");
-        }
+    private void authenticate(String email, String password)  {
+
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
+//        try {
+//        } catch (DisabledException e) {
+//           throw new RuntimeException("User Disabled");
+//        }catch (BadCredentialsException e){
+//            throw new RuntimeException("Email or password is incorrect");
+//        }
     }
 
     @PostMapping("/encode")
     public String encodePassword(@RequestBody Map<String,String> request){
         return passwordEncoder.encode(request.get("password"));
-
     }
 }
