@@ -7,27 +7,24 @@ import com.saurabh.quickbill.io.OrderResponse;
 import com.saurabh.quickbill.io.RazorpayOrderResponse;
 import com.saurabh.quickbill.service.RazorpayService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-
 import static java.lang.Math.round;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RazorpayServiceImpl implements RazorpayService {
 
-    @Value("${razorpay.key.id}")
-    private String razorpayKeyId;
-
-    @Value("${razorpay.key.secret}")
-    private String razorpayKeySecret;
+    private final RazorpayClient razorpayClient;
 
     @Override
     public RazorpayOrderResponse createOrder(Double amount, String currency) throws RazorpayException {
 
-        RazorpayClient razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+        // Temporary — add during testing, remove after
+        log.info("RazorpayClient instance: {}", System.identityHashCode(razorpayClient));
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", (int) Math.round(amount * 100));
         orderRequest.put("currency", currency);
