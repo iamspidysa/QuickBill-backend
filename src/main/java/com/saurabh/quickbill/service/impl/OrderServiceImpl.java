@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    @Value("${jwt.secret.key}")
+    @Value("${RAZORPAY_SECRET}")
     private String razorpayKeySecret;
 
     private final OrderEntityRepository orderEntityRepository;
