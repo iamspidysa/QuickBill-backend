@@ -3,7 +3,6 @@ package com.saurabh.quickbill.service;
 import com.saurabh.quickbill.io.OrderRequest;
 import com.saurabh.quickbill.io.OrderResponse;
 import com.saurabh.quickbill.io.PaymentVerificationRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,4 +22,12 @@ public interface OrderService {
     Long countByOrderDate(LocalDate date);
 
     List<OrderResponse> findRecentOrders();
+
+    /**
+     * Fetch a single order by its business key.
+     * Used by PaymentController to retrieve the server-computed grandTotal
+     * before creating a Razorpay order — prevents clients from supplying
+     * an arbitrary amount to the payment gateway.
+     */
+    OrderResponse getOrderById(String orderId);
 }

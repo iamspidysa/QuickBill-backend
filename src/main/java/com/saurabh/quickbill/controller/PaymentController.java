@@ -20,15 +20,26 @@ public class PaymentController {
     private final RazorpayService razorpayService;
     private final OrderService orderService;
 
+    /**
+     * Creates a Razorpay payment order.
+     *
+     * The amount is NOT taken from the request body. Instead:
+     *   1. We fetch the order by orderId from the DB.
+     *   2. We use its server-computed grandTotal as the Razorpay amount.
+     *
+     * This ensures a client cannot manipulate the payment amount by sending
+     * a crafted request (e.g. amount: 0.01 for a ₹2,000 order).
+     */
     @PostMapping("/create-order")
     @ResponseStatus(HttpStatus.CREATED)
-    public RazorpayOrderResponse createRazorpayResponse(@Valid @RequestBody PaymentRequest request) throws RazorpayException {
-
-        return razorpayService.createOrder(request.getAmount(), request.getCurrency());
+    public RazorpayOrderResponse createRazorpayOrder(@Valid @RequestBody PaymentRequest request)
+            throws RazorpayException {
+        OrderResponse order = orderService.getOrderById(request.getOrderId());
+        return razorpayService.createOrder(order.getGrandTotal(), request.getCurrency());
     }
 
     @PostMapping("/verify")
-    public OrderResponse verifyPayment(@Valid @RequestBody PaymentVerificationRequest request){
+    public OrderResponse verifyPayment(@Valid @RequestBody PaymentVerificationRequest request) {
         return orderService.verifyPayment(request);
     }
 }

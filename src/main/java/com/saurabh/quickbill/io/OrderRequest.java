@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -25,43 +24,37 @@ public class OrderRequest {
     private String phoneNumber;
 
     @NotEmpty(message = "Cart must have at least one item")
-    @Valid                          // Cascade validation into each OrderItemRequest
+    @Valid
     private List<OrderItemRequest> cartItems;
-
-    @NotNull(message = "Sub total is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Sub total must be greater than zero")
-    private BigDecimal subTotal;    // Changed from Double — use BigDecimal for money
-
-    @NotNull(message = "Tax is required")
-    @DecimalMin(value = "0.0", message = "Tax cannot be negative")
-    private BigDecimal tax;
-
-    @NotNull(message = "Grand total is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Grand total must be greater than zero")
-    private BigDecimal grandTotal;
 
     @NotBlank(message = "Payment method is required")
     @Pattern(regexp = "^(CASH|UPI)$", message = "Payment method must be CASH or UPI")
     private String paymentMethod;
 
+    /*
+     * subTotal, tax, and grandTotal have been intentionally removed.
+     * These are computed server-side from DB item prices and must never
+     * be trusted from the client. See OrderServiceImpl.createOrder().
+     */
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    public static class OrderItemRequest{
+    public static class OrderItemRequest {
 
         @NotBlank(message = "Item ID is required")
         private String itemId;
 
-        @NotBlank(message = "Item name is required")
-        private String name;
-
-        @NotNull(message = "Item price is required")
-        @DecimalMin(value = "0.01", message = "Item price must be greater than zero")
-        private BigDecimal price;   // Changed from Double
-
         @NotNull(message = "Quantity is required")
-        @jakarta.validation.constraints.Min(value = 1, message = "Quantity must be at least 1")
+        @Min(value = 1, message = "Quantity must be at least 1")
+        @Max(value = 100, message = "Quantity cannot exceed 100 per line item")
         private Integer quantity;
+
+        /*
+         * name and price have been intentionally removed.
+         * The server fetches these from tbl_items by itemId.
+         * Accepting them from the client would allow price manipulation.
+         */
     }
 }
