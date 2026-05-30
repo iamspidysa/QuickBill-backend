@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "tbl_orders")
@@ -25,6 +26,7 @@ public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "order_id", unique = true, nullable = false, updatable = false)
     private String orderId;
     private String customerName;
     private String phoneNumber;
@@ -45,8 +47,23 @@ public class OrderEntity {
     private PaymentMethod paymentMethod;
 
     @PrePersist
-    protected void onCreate(){
-        this.orderId = "ORD"+System.currentTimeMillis();
+    protected void onCreate() {
+        // ORD-prefix + first 8 chars of a random UUID in uppercase.
+        // e.g. ORD-A3F92B1C
+        //
+        // Why not System.currentTimeMillis():
+        //   Two concurrent requests in the same millisecond produce identical IDs —
+        //   a primary business key collision on a billing system.
+        //
+        // Why 8 hex chars from UUID (not full UUID):
+        //   16^8 = ~4.3 billion combinations — statistically impossible to collide
+        //   at any realistic order volume, while remaining short enough to print
+        //   on a receipt or display in a URL path (/orders/ORD-A3F92B1C).
+        this.orderId = "ORD-" + UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 8)
+                .toUpperCase();
         this.createdAt = LocalDateTime.now();
     }
 }
