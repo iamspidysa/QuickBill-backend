@@ -14,6 +14,7 @@ import com.saurabh.quickbill.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,11 +107,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getLatestOrders() {
-        return orderEntityRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .map(this::convertToResponse)
-                .toList();
+    public Page<OrderResponse> getLatestOrders(int page, int size) {
+        return orderEntityRepository
+                .findAllByOrderByCreatedAtDesc(PageRequest.of(page, size))
+                .map(this::convertToResponse);
+        // Page.map() internally streams and converts each OrderEntity → OrderResponse.
+        // No .stream().map().toList() needed — Spring Data does it for you.
     }
 
     @Override

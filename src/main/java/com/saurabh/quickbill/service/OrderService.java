@@ -3,6 +3,7 @@ package com.saurabh.quickbill.service;
 import com.saurabh.quickbill.io.OrderRequest;
 import com.saurabh.quickbill.io.OrderResponse;
 import com.saurabh.quickbill.io.PaymentVerificationRequest;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,7 +14,13 @@ public interface OrderService {
 
     void deleteOrder(String orderId);
 
-    List<OrderResponse> getLatestOrders();
+    //    List<OrderResponse> getLatestOrders();
+
+    // Changed: now returns Page<OrderResponse> instead of List<OrderResponse>.
+    // Callers pass page number and size; the Page wrapper carries total count,
+    // total pages, and whether there is a next page — all the metadata the
+    // frontend needs to drive pagination or infinite scroll.
+    Page<OrderResponse> getLatestOrders(int page, int size);
 
     OrderResponse verifyPayment(PaymentVerificationRequest request);
 

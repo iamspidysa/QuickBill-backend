@@ -1,6 +1,7 @@
 package com.saurabh.quickbill.repository;
 
 import com.saurabh.quickbill.entity.OrderEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,8 @@ public interface OrderEntityRepository extends JpaRepository<OrderEntity,Long> {
 
     Optional<OrderEntity> findByOrderId(String orderId);
 
-    List<OrderEntity> findAllByOrderByCreatedAtDesc();
+//    List<OrderEntity> findAllByOrderByCreatedAtDesc();
+        Page<OrderEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT SUM(o.grandTotal) FROM OrderEntity o WHERE DATE(o.createdAt) = :date")
     Double sumSalesByDate(@Param("date")LocalDate date);
