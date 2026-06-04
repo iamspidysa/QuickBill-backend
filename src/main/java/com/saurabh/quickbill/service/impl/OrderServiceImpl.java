@@ -5,17 +5,22 @@ import com.razorpay.Utils;
 import com.saurabh.quickbill.entity.ItemEntity;
 import com.saurabh.quickbill.entity.OrderEntity;
 import com.saurabh.quickbill.entity.OrderItemEntity;
+import com.saurabh.quickbill.entity.UserEntity;
+import com.saurabh.quickbill.exception.AccessDeniedException;
 import com.saurabh.quickbill.exception.PaymentVerificationException;
 import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.*;
 import com.saurabh.quickbill.repository.ItemRepository;
 import com.saurabh.quickbill.repository.OrderEntityRepository;
+import com.saurabh.quickbill.repository.UserRepository;
 import com.saurabh.quickbill.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,24 +46,22 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderEntityRepository orderEntityRepository;
     private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
 
         // ── 1. Resolve each cart item against the DB ──────────────────────
-        // Prices and names come from tbl_items, never from the request.
-        // Any unknown itemId fails fast with 404 before we touch the DB.
         List<OrderItemEntity> orderItems = request.getCartItems().stream()
                 .map(cartItem -> {
                     ItemEntity item = itemRepository.findByItemId(cartItem.getItemId())
                             .orElseThrow(() -> new ResourceNotFoundException(
                                     "Item not found: " + cartItem.getItemId()));
-
                     return OrderItemEntity.builder()
                             .itemId(item.getItemId())
                             .name(item.getName())
-                            .price(item.getPrice())           // DB price — never client price
+                            .price(item.getPrice())   // DB price , never client price
                             .quantity(cartItem.getQuantity())
                             .build();
                 })
@@ -66,18 +69,28 @@ public class OrderServiceImpl implements OrderService {
 
         // ── 2. Compute totals server-side ────────────────────────────────
         BigDecimal subTotal = orderItems.stream()
-                .map(item -> item.getPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal tax = subTotal
-                .multiply(taxRate)
-                .setScale(2, RoundingMode.HALF_UP);
-
+        BigDecimal tax = subTotal.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
         BigDecimal grandTotal = subTotal.add(tax);
 
-        // ── 3. Build and persist the order ───────────────────────────────
+        // ── 3. Resolve the caller's userId from the JWT principal ─────────
+        // SecurityContextHolder already holds the authenticated principal because
+        // JwtRequestFilter ran before this service method. The principal's name
+        // is the email (set by AppUserDetailsService.loadUserByUsername).
+        // We look up the UserEntity to get the stable userId (not the email,
+        // which can change) and store it on the order for later ownership checks.
+        String callerEmail = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        UserEntity caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Authenticated user not found: " + callerEmail));
+
+        // ── 4. Build and persist the order ───────────────────────────────
         PaymentDetails paymentDetails = new PaymentDetails();
         paymentDetails.setStatus(
                 PaymentMethod.valueOf(request.getPaymentMethod()) == PaymentMethod.CASH
@@ -93,6 +106,7 @@ public class OrderServiceImpl implements OrderService {
                 .paymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()))
                 .paymentDetails(paymentDetails)
                 .items(orderItems)
+                .createdByUserId(caller.getUserId())   // ← new field
                 .build();
 
         newOrder = orderEntityRepository.save(newOrder);
@@ -103,6 +117,35 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(String orderId) {
         OrderEntity existingOrder = orderEntityRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        // ── Ownership check ───────────────────────────────────────────────
+        // Pull the caller's identity from the security context.
+        // At this point the JWT has already been validated by JwtRequestFilter,
+        // so getAuthentication() is guaranteed non-null on any secured endpoint.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String callerEmail = auth.getName();
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            // Resolve the caller's userId from their email, then compare to the
+            // userId stamped on the order at creation time.
+            UserEntity caller = userRepository.findByEmail(callerEmail)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Authenticated user not found: " + callerEmail));
+
+            if (!caller.getUserId().equals(existingOrder.getCreatedByUserId())) {
+                // Return 403, not 404.
+                // Returning 404 would leak information about whether the order
+                // exists at all — an attacker could enumerate valid order IDs
+                // by probing which ones return 404 vs 403.
+                throw new AccessDeniedException(
+                        "You do not have permission to delete this order.");
+            }
+        }
+        // Admin bypasses the ownership check — can delete any order.
+
         orderEntityRepository.delete(existingOrder);
     }
 

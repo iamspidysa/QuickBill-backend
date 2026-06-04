@@ -34,6 +34,11 @@ public class OrderEntity {
     private BigDecimal tax;
     private BigDecimal grandTotal;
 
+    // Who created this order. Populated from the JWT principal at creation time.
+    // Used in deleteOrder() to enforce that only the creating user (or an admin)
+    // can delete the order. Never sent from the client — always set server-side.
+    private String createdByUserId;
+
     private LocalDateTime createdAt;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

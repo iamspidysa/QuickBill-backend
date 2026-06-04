@@ -98,4 +98,11 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<GlobalExceptionHandler.ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new GlobalExceptionHandler.ErrorResponse(403, ex.getMessage()));
+    }
+
 }
