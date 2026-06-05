@@ -105,4 +105,11 @@ public class GlobalExceptionHandler {
                 .body(new GlobalExceptionHandler.ErrorResponse(403, ex.getMessage()));
     }
 
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFile(InvalidFileException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(400, ex.getMessage()));
+    }
+
 }
