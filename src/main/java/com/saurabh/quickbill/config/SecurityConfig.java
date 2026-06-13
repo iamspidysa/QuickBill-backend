@@ -1,7 +1,7 @@
 package com.saurabh.quickbill.config;
 
-
 import com.saurabh.quickbill.filter.JwtRequestFilter;
+import com.saurabh.quickbill.filter.RateLimitFilter;
 import com.saurabh.quickbill.service.impl.AppUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +33,7 @@ public class SecurityConfig {
 
     private final AppUserDetailsService appUserDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
@@ -46,6 +47,13 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // RateLimitFilter runs first — before JWT validation.
+                // This matters for /login: the JWT filter is a no-op there
+                // (no token yet), but rate limiting still needs to apply.
+                // Order: RateLimitFilter → JwtRequestFilter → controller
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
