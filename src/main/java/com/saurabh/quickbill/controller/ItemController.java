@@ -28,7 +28,6 @@ public class ItemController {
     public ItemResponse addItem(@RequestPart("item") String itemString,
                                 @RequestPart("image") MultipartFile file){
         ObjectMapper objectMapper = new ObjectMapper();
-//        ItemRequest itemRequest = null;
 
         try{
             ItemRequest itemRequest = objectMapper.readValue(itemString, ItemRequest.class);

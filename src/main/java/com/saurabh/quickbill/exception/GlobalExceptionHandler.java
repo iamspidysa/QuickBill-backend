@@ -15,22 +15,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Fires when @Valid fails on a @RequestBody
-    // Duplicate Method
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public Map<String, String> handleValidationError(MethodArgumentNotValidException ex){
-//        Map<String, String> errors = new HashMap<>();
-//        ex.getBindingResult()
-//                .getAllErrors()
-//                .forEach(error -> {
-//                    String field = ((FieldError)error).getField();
-//                    String message = error.getDefaultMessage();
-//                    errors.put(field, message);
-//                });
-//        return errors;
-//    }
-
     // ── 404 — Resource Not Found ──────────────────────────────────────────
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {

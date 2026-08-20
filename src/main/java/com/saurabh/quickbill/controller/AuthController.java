@@ -7,17 +7,13 @@ import com.saurabh.quickbill.service.impl.AppUserDetailsService;
 import com.saurabh.quickbill.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -43,18 +39,13 @@ public class AuthController {
     }
 
     private void authenticate(String email, String password)  {
-
+        // BadCredentialsException / DisabledException propagate up to
+        // GlobalExceptionHandler, which maps them to proper HTTP responses.
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
-//        try {
-//        } catch (DisabledException e) {
-//           throw new RuntimeException("User Disabled");
-//        }catch (BadCredentialsException e){
-//            throw new RuntimeException("Email or password is incorrect");
-//        }
     }
 
-    @PostMapping("/encode")
-    public String encodePassword(@RequestBody Map<String,String> request){
-        return passwordEncoder.encode(request.get("password"));
-    }
+//    @PostMapping("/encode")
+//    public String encodePassword(@RequestBody Map<String,String> request){
+//        return passwordEncoder.encode(request.get("password"));
+//    }
 }
