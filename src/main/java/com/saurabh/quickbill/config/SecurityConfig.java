@@ -43,7 +43,7 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/login","/encode").permitAll()
-                        .requestMatchers("/categories","/items","/orders","/payments","/dashboard").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/categories/**","/items/**","/orders/**","/payments/**","/dashboard/**").hasAnyRole("USER","ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -72,8 +72,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                        .map(String::trim)
-                        .toList();
+                .map(String::trim)
+                .toList();
         config.setAllowedOrigins(origins);
 
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
@@ -94,3 +94,4 @@ public class SecurityConfig {
         return new ProviderManager(authProvider);
     }
 }
+
