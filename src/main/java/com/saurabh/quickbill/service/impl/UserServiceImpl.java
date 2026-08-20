@@ -1,6 +1,7 @@
 package com.saurabh.quickbill.service.impl;
 
 import com.saurabh.quickbill.entity.UserEntity;
+import com.saurabh.quickbill.exception.DuplicateResourceException;
 import com.saurabh.quickbill.exception.ResourceNotFoundException;
 import com.saurabh.quickbill.io.UserRequest;
 import com.saurabh.quickbill.io.UserResponse;
@@ -24,6 +25,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("A user with this email already exists: " + request.getEmail());
+        }
         UserEntity newUser = convertToEntity(request);
         newUser = userRepository.save(newUser);
         return convertToResponse(newUser);
