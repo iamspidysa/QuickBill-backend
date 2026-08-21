@@ -241,7 +241,17 @@ public class OrderServiceImpl implements OrderService {
             attributes.put("razorpay_order_id", razorpayOrderId);
             attributes.put("razorpay_payment_id", razorpayPaymentId);
             attributes.put("razorpay_signature", razorpaySignature);
-            Utils.verifyPaymentSignature(attributes, razorpayKeySecret);
+
+            // Utils.verifyPaymentSignature RETURNS a boolean — it does NOT
+            // throw RazorpayException just because the signature is wrong.
+            // It only throws on malformed/unparseable input. Discarding the
+            // return value (as this code used to) meant EVERY signature,
+            // including a completely fabricated one, was treated as valid.
+            boolean isValid = Utils.verifyPaymentSignature(attributes, razorpayKeySecret);
+            if (!isValid) {
+                throw new PaymentVerificationException(
+                        "Payment signature verification failed. Possible fraud attempt.");
+            }
         } catch (RazorpayException e) {
             throw new PaymentVerificationException(
                     "Payment signature verification failed. Possible fraud attempt.");

@@ -68,6 +68,14 @@
 			<scope>test</scope>
 		</dependency>
 
+        <!--  H2 — in-memory database used only by @DataJpaTest repository tests.
+		     Never touches the real MySQL database; test scope only.  -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
 		<!-- AWS S3 -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
